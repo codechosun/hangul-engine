@@ -122,3 +122,86 @@ void FLinear::InitScaled(FRandom& Rng)
     Real Range = (Real)(1.0 / std::sqrt((double)InSize()));
     InitUniform(Rng, Range);
 }
+
+void FLinearGrad::Zero()
+{
+    Weight.Fill(Real(0));
+    for (size_t i = 0; i < Bias.Size(); i++)
+    {
+        Bias[i] = Real(0);
+    }
+}
+
+FVector LinearBackward(const FLinear& Layer, const FVector& Input,
+                       const FVector& GradOutput, FLinearGrad& Grad)
+{
+    assert(Input.Size() == Layer.InSize());
+    assert(GradOutput.Size() == Layer.OutSize());
+    assert(Grad.Weight.Rows() == Layer.OutSize());
+    assert(Grad.Weight.Cols() == Layer.InSize());
+
+    // y_i = sum_j W_ij x_j + b_i 이므로
+    //   dL/dW_ij = dL/dy_i * x_j
+    //   dL/db_i  = dL/dy_i
+    for (size_t Row = 0; Row < Layer.OutSize(); Row++)
+    {
+        Real Upstream = GradOutput[Row];
+
+        Real* GradRow = Grad.Weight.RowData(Row);
+        for (size_t Col = 0; Col < Layer.InSize(); Col++)
+        {
+            GradRow[Col] += Upstream * Input[Col];
+        }
+
+        Grad.Bias[Row] += Upstream;
+    }
+
+    //   dL/dx_j = sum_i W_ij * dL/dy_i
+    // 이것이 곧 전치 행렬에 곱하는 것이다.
+    return TransposedMultiply(Layer.Weight, GradOutput);
+}
+
+FVector TanhBackward(const FVector& Output, const FVector& GradOutput)
+{
+    assert(Output.Size() == GradOutput.Size());
+
+    FVector Result(Output.Size());
+
+    for (size_t i = 0; i < Output.Size(); i++)
+    {
+        Real Y = Output[i];
+        Result[i] = GradOutput[i] * (Real(1) - Y * Y);
+    }
+
+    return Result;
+}
+
+FVector ReluBackward(const FVector& PreActivation, const FVector& GradOutput)
+{
+    assert(PreActivation.Size() == GradOutput.Size());
+
+    FVector Result(PreActivation.Size());
+
+    for (size_t i = 0; i < PreActivation.Size(); i++)
+    {
+        Result[i] = (PreActivation[i] > Real(0)) ? GradOutput[i] : Real(0);
+    }
+
+    return Result;
+}
+
+FVector SoftmaxCrossEntropyBackward(const FVector& Probabilities, size_t Target)
+{
+    assert(Target < Probabilities.Size());
+
+    FVector Result(Probabilities.Size());
+
+    for (size_t i = 0; i < Probabilities.Size(); i++)
+    {
+        Result[i] = Probabilities[i];
+    }
+
+    Result[Target] -= Real(1);
+
+    return Result;
+}
