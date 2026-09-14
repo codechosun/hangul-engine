@@ -13,6 +13,13 @@ data/npy_from_cpp.npy
 data/npy_big.npy
 data/npy_big.csv
 
+# C6 이 만들어내는 것. 예제를 한 번 돌리면 다시 생긴다.
+# 그림(.png)은 본문에서 참조하므로 커밋한다.
+data/embedding.npy
+data/vocab.csv
+data/loss_curve.csv
+data/pca_cpp.csv
+
 # A9 가 쓰는 Kiwi 배포본. 500MB 급이라 커밋하지 않는다.
 # tools/get_kiwi.py 로 언제든 다시 받는다.
 third_party/

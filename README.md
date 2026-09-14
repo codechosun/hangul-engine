@@ -43,7 +43,7 @@ C/C++를 아는 사람. 구체적으로는 아래 세 권을 마친 정도를 �
 |---|---|---|
 | **A. N-그램** (C) | A0 ~ A9 | **완료** |
 | **B. 평가 도구** (C++) | B1 ~ B3 | **완료** |
-| **C. 뉴럴 네트워크** (C++) | C1 ~ C6 | C1 ~ C5 완료 |
+| **C. 뉴럴 네트워크** (C++) | C1 ~ C6 | **완료** |
 | **D. 트랜스포머** (C++) | D1 ~ D8 | 예정 |
 | **E. 사후훈련과 엔진** (C++) | E1 ~ E3 | 예정 |
 
@@ -85,7 +85,7 @@ A2부터 한국어 위키백과 코퍼스가 필요하다. 파이썬은 **데이
 
 ```bash
 python -m venv .venv
-.venv/Scripts/python -m pip install datasets
+.venv/Scripts/python -m pip install datasets numpy matplotlib
 
 .venv/Scripts/python tools/download_corpus.py         # data/corpus.txt (약 1.3GB)
 .venv/Scripts/python tools/make_expected.py           # data/expected.csv
