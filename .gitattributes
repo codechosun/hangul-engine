@@ -10,3 +10,4 @@ data/bigram_summary.csv -text
 data/ngram_expected.csv -text
 data/ngram_context.csv -text
 data/ngram_summary.csv -text
+data/nplm_expected.csv -text

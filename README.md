@@ -43,7 +43,7 @@ C/C++를 아는 사람. 구체적으로는 아래 세 권을 마친 정도를 �
 |---|---|---|
 | **A. N-그램** (C) | A0 ~ A9 | **완료** |
 | **B. 평가 도구** (C++) | B1 ~ B3 | **완료** |
-| **C. 뉴럴 네트워크** (C++) | C1 ~ C6 | C1·C2 완료 |
+| **C. 뉴럴 네트워크** (C++) | C1 ~ C6 | C1 ~ C3 완료 |
 | **D. 트랜스포머** (C++) | D1 ~ D8 | 예정 |
 | **E. 사후훈련과 엔진** (C++) | E1 ~ E3 | 예정 |
 
@@ -89,6 +89,7 @@ python -m venv .venv
 .venv/Scripts/python tools/make_expected.py           # data/expected.csv
 .venv/Scripts/python tools/make_bigram_expected.py    # data/bigram_*.csv
 .venv/Scripts/python tools/make_ngram_expected.py     # data/ngram_*.csv
+.venv/Scripts/python tools/make_nplm_expected.py      # data/nplm_expected.csv
 ```
 
 A9는 형태소 분석기 Kiwi가 따로 필요하다. 버전이 고정되어 있다.
