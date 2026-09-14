@@ -31,6 +31,15 @@ uint64_t RandomNext(FRandom* Rng);
 // 0 이상 Limit 미만의 난수. Limit 이 0 이면 0.
 uint64_t RandomBelow(FRandom* Rng, uint64_t Limit);
 
+// 0 이상 1 미만의 실수. (C1 에서 추가)
+//
+// 64비트 난수의 위쪽 53비트만 쓴다. double 의 가수부가 53비트이므로
+// 그 안에서는 모든 값이 같은 간격으로 나온다.
+double RandomUnit(FRandom* Rng);
+
+// -Range 이상 +Range 미만의 실수. 가중치를 처음 채울 때 쓴다.
+double RandomRange(FRandom* Rng, double Range);
+
 #ifdef __cplusplus
 }
 #endif

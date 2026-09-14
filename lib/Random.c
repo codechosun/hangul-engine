@@ -38,3 +38,20 @@ uint64_t RandomBelow(FRandom* Rng, uint64_t Limit)
     // 기껏해야 10억 단위라 치우침이 100억분의 1 수준이다. 무시해도 된다.
     return RandomNext(Rng) % Limit;
 }
+
+double RandomUnit(FRandom* Rng)
+{
+    // 위쪽 53비트를 뽑아 2^53 으로 나눈다.
+    //
+    // 아래 비트를 버리는 이유는 xorshift 의 하위 비트가 상위 비트보다
+    // 덜 섞이기 때문이다. 그리고 double 의 가수부가 53비트라,
+    // 그보다 많이 가져와봐야 어차피 버려진다.
+    uint64_t Bits = RandomNext(Rng) >> 11;
+
+    return (double)Bits / 9007199254740992.0;   // 2^53
+}
+
+double RandomRange(FRandom* Rng, double Range)
+{
+    return (RandomUnit(Rng) * 2.0 - 1.0) * Range;
+}
