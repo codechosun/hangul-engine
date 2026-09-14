@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// 유니코드 코드포인트는 0 부터 0x10FFFF 까지다.
-#define CODEPOINT_LIMIT 0x110000u
-
 // 한 번에 읽어들일 크기. 뒤쪽 여유 8바이트는 잘린 글자를 담아두는 자리.
 #define CHUNK_SIZE (1u << 20)
 
