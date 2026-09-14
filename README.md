@@ -10,7 +10,7 @@ N-그램부터 트랜스포머까지 30장에 걸쳐 직접 구현하고, 마지
 
 이 저장소의 최종 산출물은 **30개의 예제 프로그램이 아니라 하나의 엔진**이다.
 
-`lib/` 폴더가 그 엔진이다. 지금은 UTF-8 처리기·파일 스캐너·빈도표·샘플러·해시맵·바이그램 모델이 들어 있고, 장을 거치며 토크나이저·텐서·트랜스포머가 쌓인다.
+`lib/` 폴더가 그 엔진이다. 지금은 UTF-8 처리기·파일 스캐너·빈도표·샘플러·해시맵·N-그램 모델이 들어 있고, 장을 거치며 토크나이저·텐서·트랜스포머가 쌓인다.
 
 ```
 배우다가 물건이 된다
@@ -41,7 +41,7 @@ C/C++를 아는 사람. 구체적으로는 아래 세 권을 마친 정도를 �
 
 | 파트 | 장 | 상태 |
 |---|---|---|
-| **A. N-그램** (C) | A0 ~ A9 | A0 ~ A5 완료 |
+| **A. N-그램** (C) | A0 ~ A9 | A0 ~ A6 완료 |
 | **B. 평가 도구** (C++) | B1 ~ B3 | 예정 |
 | **C. 뉴럴 네트워크** (C++) | C1 ~ C6 | 예정 |
 | **D. 트랜스포머** (C++) | D1 ~ D8 | 예정 |
@@ -86,6 +86,7 @@ python -m venv .venv
 .venv/Scripts/python tools/download_corpus.py         # data/corpus.txt (약 1.3GB)
 .venv/Scripts/python tools/make_expected.py           # data/expected.csv
 .venv/Scripts/python tools/make_bigram_expected.py    # data/bigram_*.csv
+.venv/Scripts/python tools/make_ngram_expected.py     # data/ngram_*.csv
 ```
 
 > 전역 파이썬에 설치하면 `huggingface_hub` 버전이 올라가면서 다른 프로젝트가 깨질 수 있다. **반드시 venv를 쓸 것.**

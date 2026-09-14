@@ -7,3 +7,6 @@
 data/expected.csv -text
 data/bigram_expected.csv -text
 data/bigram_summary.csv -text
+data/ngram_expected.csv -text
+data/ngram_context.csv -text
+data/ngram_summary.csv -text
