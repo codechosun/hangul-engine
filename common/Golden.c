@@ -80,3 +80,76 @@ int GoldenLoad(const char* Path, FGoldenRow** OutRows, int* OutCount)
     *OutCount = Count;
     return 1;
 }
+
+int GoldenLoadTriple(const char* Path, FGoldenTriple** OutRows, int* OutCount)
+{
+    assert(Path != NULL);
+    assert(OutRows != NULL);
+    assert(OutCount != NULL);
+
+    FILE* File = fopen(Path, "rb");
+    if (File == NULL)
+    {
+        return 0;
+    }
+
+    int Capacity = INITIAL_CAPACITY;
+    int Count = 0;
+
+    FGoldenTriple* Rows =
+        (FGoldenTriple*)malloc((size_t)Capacity * sizeof(FGoldenTriple));
+    if (Rows == NULL)
+    {
+        fclose(File);
+        return 0;
+    }
+
+    char Line[256];
+
+    if (fgets(Line, sizeof(Line), File) == NULL)
+    {
+        free(Rows);
+        fclose(File);
+        return 0;
+    }
+
+    while (fgets(Line, sizeof(Line), File) != NULL)
+    {
+        unsigned long long First = 0;
+        unsigned long long Second = 0;
+        unsigned long long Value = 0;
+
+        if (sscanf(Line, "%llu,%llu,%llu", &First, &Second, &Value) != 3)
+        {
+            continue;
+        }
+
+        if (Count == Capacity)
+        {
+            int NewCapacity = Capacity * 2;
+            FGoldenTriple* Grown = (FGoldenTriple*)realloc(
+                Rows, (size_t)NewCapacity * sizeof(FGoldenTriple));
+
+            if (Grown == NULL)
+            {
+                free(Rows);
+                fclose(File);
+                return 0;
+            }
+
+            Rows = Grown;
+            Capacity = NewCapacity;
+        }
+
+        Rows[Count].First = (uint32_t)First;
+        Rows[Count].Second = (uint32_t)Second;
+        Rows[Count].Value = (uint64_t)Value;
+        Count++;
+    }
+
+    fclose(File);
+
+    *OutRows = Rows;
+    *OutCount = Count;
+    return 1;
+}

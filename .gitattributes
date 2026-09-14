@@ -5,3 +5,5 @@
 # 정답표는 C 프로그램이 한 줄씩 그대로 비교한다.
 # 줄바꿈이 바뀌면 검증이 깨지므로 변환을 아예 막는다.
 data/expected.csv -text
+data/bigram_expected.csv -text
+data/bigram_summary.csv -text

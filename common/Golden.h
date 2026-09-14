@@ -25,4 +25,15 @@ typedef struct
 // 성공하면 1, 파일을 못 열거나 형식이 깨졌으면 0.
 int GoldenLoad(const char* Path, FGoldenRow** OutRows, int* OutCount);
 
+// 정답표 한 줄, 세 칸짜리. "앞,뒤,횟수" 형식에 쓴다. (A5 에서 추가)
+typedef struct
+{
+    uint32_t First;
+    uint32_t Second;
+    uint64_t Value;
+} FGoldenTriple;
+
+// "값,값,값" 형식의 CSV 를 읽는다. 나머지는 GoldenLoad 와 같다.
+int GoldenLoadTriple(const char* Path, FGoldenTriple** OutRows, int* OutCount);
+
 #endif
