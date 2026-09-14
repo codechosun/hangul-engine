@@ -13,6 +13,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     uint64_t State;   // 0 이 되면 안 된다. 계속 0 만 나온다.
@@ -27,4 +31,7 @@ uint64_t RandomNext(FRandom* Rng);
 // 0 이상 Limit 미만의 난수. Limit 이 0 이면 0.
 uint64_t RandomBelow(FRandom* Rng, uint64_t Limit);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

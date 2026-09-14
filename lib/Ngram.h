@@ -21,6 +21,10 @@
 #include "Bigram.h"   // TOKEN_BOS, TOKEN_EOS, VOCAB_LIMIT
 #include "Random.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 한 그램에 담을 수 있는 최대 토큰 수.
 #define NGRAM_MAX_ORDER 8
 
@@ -91,4 +95,7 @@ int NgramSave(const FNgram* Model, const char* Path);
 // 표시가 안 맞거나(다른 기계에서 구웠거나) 버전이 다르면 0.
 int NgramLoad(FNgram* Model, const char* Path);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

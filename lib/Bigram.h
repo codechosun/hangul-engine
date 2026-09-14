@@ -17,6 +17,10 @@
 #include "Random.h"
 #include "Utf8.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 특수 토큰은 유니코드 밖의 번호를 쓴다.
 // 코드포인트는 0x10FFFF 까지이므로 그 위는 영원히 빈다.
 // 진짜 글자와 절대 부딪히지 않는다.
@@ -66,4 +70,7 @@ uint32_t BigramPick(const FBigram* Model, uint32_t Prev, FRandom* Rng);
 int BigramGenerate(const FBigram* Model, FRandom* Rng,
                    uint32_t* Out, int MaxLength);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

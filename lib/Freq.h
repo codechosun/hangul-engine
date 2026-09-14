@@ -9,6 +9,10 @@
 
 #include "Utf8.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 글자 하나와 그 등장 횟수.
 typedef struct
 {
@@ -34,4 +38,7 @@ void FreqSort(FCharCount* Table, int Count);
 // qsort 에 넘기는 비교 함수. 본문에서 따로 다루므로 밖으로 꺼내 두었다.
 int FreqCompare(const void* A, const void* B);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

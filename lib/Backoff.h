@@ -27,6 +27,10 @@
 #include "Ngram.h"
 #include "Random.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 할인율을 분수로 둔다. 3/4 = 0.75 는 실무에서 흔히 쓰는 값이다.
 //
 // 소수를 쓰지 않는 이유는 하나다. 정수만으로 하면 **어느 기계에서나
@@ -63,4 +67,7 @@ uint32_t BackoffPick(FBackoff* Backoff, const uint32_t* Context, int Length,
 int BackoffGenerate(FBackoff* Backoff, FRandom* Rng,
                     uint32_t* Out, int MaxLength);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

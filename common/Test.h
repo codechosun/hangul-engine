@@ -6,6 +6,10 @@
 #ifndef TEST_H
 #define TEST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 지금까지 실행한 검사 수와 그중 실패한 수.
 extern int GCheckCount;
 extern int GFailCount;
@@ -30,4 +34,7 @@ int CheckNearImpl(double A, double B, double Tol,
 // 결과를 출력하고 종료 코드를 돌려준다. 전부 통과면 0.
 int ReportResult(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

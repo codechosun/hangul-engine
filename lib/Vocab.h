@@ -21,6 +21,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     // --- 아레나. 문자열 내용이 여기 산다 ---
@@ -59,4 +63,7 @@ const char* VocabText(const FVocab* Vocab, uint32_t Id);
 
 #define VOCAB_NONE 0xFFFFFFFFu
 
+#ifdef __cplusplus
+}
+#endif
 #endif

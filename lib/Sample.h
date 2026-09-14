@@ -10,6 +10,10 @@
 #include "Freq.h"
 #include "Random.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 누적 분포를 미리 만들어두고 이진 탐색으로 뽑는다.
 //
 // 매번 처음부터 더해가며 찾으면 한 번 뽑는 데 O(N) 이 든다.
@@ -35,4 +39,7 @@ uint32_t SamplerFind(const FSampler* Sampler, uint64_t Target);
 // 확률에 비례해 코드포인트 하나를 뽑는다.
 uint32_t SamplerPick(const FSampler* Sampler, FRandom* Rng);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

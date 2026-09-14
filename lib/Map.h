@@ -18,6 +18,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     uint64_t* Keys;
@@ -53,4 +57,7 @@ double MapAverageProbe(const FMap* Map);
 // 얼마나 찼는가. 0.0 ~ 1.0
 double MapLoadFactor(const FMap* Map);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

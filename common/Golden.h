@@ -10,6 +10,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 정답표 한 줄. "키,값" 두 칸짜리 CSV 를 담는다.
 typedef struct
 {
@@ -36,4 +40,7 @@ typedef struct
 // "값,값,값" 형식의 CSV 를 읽는다. 나머지는 GoldenLoad 와 같다.
 int GoldenLoadTriple(const char* Path, FGoldenTriple** OutRows, int* OutCount);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

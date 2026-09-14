@@ -14,6 +14,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 한 번에 읽어들일 기본 크기. A7 에서 이 값을 재보고 정했다.
 #define SCAN_CHUNK (1u << 20)
 
@@ -38,4 +42,7 @@ void ScanClose(FScanner* Scanner);
 // 다음 코드포인트를 OutCode 에 담고 1 을 준다. 더 없으면 0.
 int ScanNext(FScanner* Scanner, uint32_t* OutCode);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

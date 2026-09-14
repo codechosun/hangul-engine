@@ -12,6 +12,10 @@
 #ifndef PRETTY_H
 #define PRETTY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 이 문자열이 화면에서 차지하는 칸 수.
 // ASCII 는 1칸, 그 밖은 2칸으로 친다. 한글·한자·전각 기호가 모두 2칸이므로
 // 이 교재가 찍는 범위에서는 이 어림이 정확하다.
@@ -23,4 +27,7 @@ void PrintPadded(const char* Text, int Width);
 // 오른쪽 정렬.
 void PrintPaddedRight(const char* Text, int Width);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

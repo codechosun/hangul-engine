@@ -21,6 +21,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     int KeyLength;          // 키 하나에 들어가는 토큰 수
@@ -62,4 +66,7 @@ const uint32_t* GramMapKeyAt(const FGramMap* Map, uint64_t Index);
 
 double GramMapAverageProbe(const FGramMap* Map);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

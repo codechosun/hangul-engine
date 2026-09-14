@@ -12,10 +12,17 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef USE_DOUBLE
 typedef double Real;
 #else
 typedef float Real;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

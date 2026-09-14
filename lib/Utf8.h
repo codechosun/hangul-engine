@@ -7,6 +7,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 유니코드 코드포인트는 0 부터 0x10FFFF 까지다.
 #define CODEPOINT_LIMIT 0x110000u
 
@@ -37,4 +41,7 @@ int Utf8Length(const char* Text);
 // 코드포인트가 완성형 한글인지 본다.
 int Utf8IsHangul(uint32_t Code);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
