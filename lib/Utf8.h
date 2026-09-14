@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+// 유니코드 코드포인트는 0 부터 0x10FFFF 까지다.
+#define CODEPOINT_LIMIT 0x110000u
+
 // 완성형 한글의 코드포인트 범위. 총 11,172자.
 #define HANGUL_FIRST 0xAC00u
 #define HANGUL_LAST  0xD7A3u

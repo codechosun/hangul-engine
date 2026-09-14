@@ -7,8 +7,7 @@
 
 #include <stdint.h>
 
-// 유니코드 코드포인트의 개수. 0 부터 0x10FFFF 까지다.
-#define CODEPOINT_LIMIT 0x110000u
+#include "Utf8.h"
 
 // 글자 하나와 그 등장 횟수.
 typedef struct
