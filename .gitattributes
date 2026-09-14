@@ -12,4 +12,5 @@ data/ngram_context.csv -text
 data/ngram_summary.csv -text
 data/nplm_expected.csv -text
 data/npy_values.csv -text
+data/transformer_expected.csv -text
 data/npy_from_python.npy -text
