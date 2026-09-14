@@ -68,4 +68,20 @@ uint32_t NgramPick(const FNgram* Model, const uint32_t* Context, FRandom* Rng);
 int NgramGenerate(const FNgram* Model, FRandom* Rng,
                   uint32_t* Out, int MaxLength);
 
+// ---- 굽기와 불러오기 (A7 에서 추가) ----
+//
+// 전체 코퍼스로 3그램을 세는 데 30초가 걸린다. 한 번 세고 파일로 구워두면
+// 다음부터는 읽기만 하면 된다.
+
+#define NGRAM_MAGIC   "HGNG"        // 파일 앞 4바이트
+#define NGRAM_VERSION 1u
+#define NGRAM_ORDERMARK 0x01020304u // 바이트 순서 확인용
+
+// 모델을 파일로 쓴다. 성공하면 1.
+int NgramSave(const FNgram* Model, const char* Path);
+
+// 파일에서 모델을 읽는다. 성공하면 1.
+// 표시가 안 맞거나(다른 기계에서 구웠거나) 버전이 다르면 0.
+int NgramLoad(FNgram* Model, const char* Path);
+
 #endif

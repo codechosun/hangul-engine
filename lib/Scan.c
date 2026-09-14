@@ -7,10 +7,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-int ScanOpen(FScanner* Scanner, const char* Path)
+int ScanOpenSized(FScanner* Scanner, const char* Path, size_t Chunk)
 {
     assert(Scanner != NULL);
     assert(Path != NULL);
+
+    if (Chunk == 0)
+    {
+        Chunk = SCAN_CHUNK;
+    }
 
     Scanner->File = fopen(Path, "rb");
     if (Scanner->File == NULL)
@@ -18,7 +23,8 @@ int ScanOpen(FScanner* Scanner, const char* Path)
         return 0;
     }
 
-    Scanner->Buffer = (char*)malloc(SCAN_CHUNK + 8);
+    // 뒤쪽 여유 8바이트는 청크 경계에서 잘린 글자를 담아두는 자리.
+    Scanner->Buffer = (char*)malloc(Chunk + 8);
     if (Scanner->Buffer == NULL)
     {
         fclose(Scanner->File);
@@ -26,11 +32,17 @@ int ScanOpen(FScanner* Scanner, const char* Path)
         return 0;
     }
 
+    Scanner->Chunk = Chunk;
     Scanner->Filled = 0;
     Scanner->Pos = 0;
     Scanner->Done = 0;
 
     return 1;
+}
+
+int ScanOpen(FScanner* Scanner, const char* Path)
+{
+    return ScanOpenSized(Scanner, Path, SCAN_CHUNK);
 }
 
 void ScanClose(FScanner* Scanner)
@@ -59,7 +71,7 @@ static void Refill(FScanner* Scanner)
     size_t Leftover = Scanner->Filled - Scanner->Pos;
     memmove(Scanner->Buffer, Scanner->Buffer + Scanner->Pos, Leftover);
 
-    size_t Read = fread(Scanner->Buffer + Leftover, 1, SCAN_CHUNK, Scanner->File);
+    size_t Read = fread(Scanner->Buffer + Leftover, 1, Scanner->Chunk, Scanner->File);
 
     Scanner->Filled = Leftover + Read;
     Scanner->Pos = 0;

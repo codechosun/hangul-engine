@@ -456,3 +456,182 @@ int NgramGenerate(const FNgram* Model, FRandom* Rng,
 
     return Length;
 }
+
+// ---------------------------------------------------------------------------
+// 굽기와 불러오기
+// ---------------------------------------------------------------------------
+
+// 구조체를 통째로 fwrite 하지 않는다.
+//
+// 컴파일러는 구조체 멤버 사이에 채움(padding)을 넣을 수 있고, 그 규칙은
+// 컴파일러와 옵션에 따라 다르다. 통째로 쓰면 "내 컴퓨터에서는 되는" 파일이
+// 된다. 필드를 하나씩, 크기를 못박은 타입으로 쓴다.
+
+static int WriteU32(FILE* File, uint32_t Value)
+{
+    return fwrite(&Value, sizeof(uint32_t), 1, File) == 1;
+}
+
+static int WriteU64(FILE* File, uint64_t Value)
+{
+    return fwrite(&Value, sizeof(uint64_t), 1, File) == 1;
+}
+
+static int ReadU32(FILE* File, uint32_t* Value)
+{
+    return fread(Value, sizeof(uint32_t), 1, File) == 1;
+}
+
+static int ReadU64(FILE* File, uint64_t* Value)
+{
+    return fread(Value, sizeof(uint64_t), 1, File) == 1;
+}
+
+int NgramSave(const FNgram* Model, const char* Path)
+{
+    assert(Model != NULL);
+    assert(Path != NULL);
+
+    FILE* File = fopen(Path, "wb");
+    if (File == NULL)
+    {
+        return 0;
+    }
+
+    int Ok = 1;
+
+    Ok = Ok && (fwrite(NGRAM_MAGIC, 1, 4, File) == 4);
+    Ok = Ok && WriteU32(File, NGRAM_ORDERMARK);
+    Ok = Ok && WriteU32(File, NGRAM_VERSION);
+    Ok = Ok && WriteU32(File, (uint32_t)Model->Order);
+
+    Ok = Ok && WriteU64(File, Model->GramCount);
+    Ok = Ok && WriteU64(File, Model->ContextCount);
+    Ok = Ok && WriteU64(File, Model->Total);
+    Ok = Ok && WriteU64(File, Model->OnceCount);
+    Ok = Ok && WriteU64(File, Model->LineCount);
+    Ok = Ok && WriteU64(File, Model->CharCount);
+
+    size_t GramWords = (size_t)Model->GramCount * (size_t)Model->Order;
+
+    Ok = Ok && (fwrite(Model->Grams, sizeof(uint32_t), GramWords, File)
+                == GramWords);
+    Ok = Ok && (fwrite(Model->Cumulative, sizeof(uint64_t),
+                       (size_t)Model->GramCount, File)
+                == (size_t)Model->GramCount);
+    Ok = Ok && (fwrite(Model->ContextStart, sizeof(uint64_t),
+                       (size_t)Model->ContextCount + 1, File)
+                == (size_t)Model->ContextCount + 1);
+
+    fclose(File);
+    return Ok;
+}
+
+int NgramLoad(FNgram* Model, const char* Path)
+{
+    assert(Model != NULL);
+    assert(Path != NULL);
+
+    memset(Model, 0, sizeof(*Model));
+
+    FILE* File = fopen(Path, "rb");
+    if (File == NULL)
+    {
+        return 0;
+    }
+
+    char Magic[4] = { 0 };
+    uint32_t OrderMark = 0;
+    uint32_t Version = 0;
+    uint32_t Order = 0;
+
+    if (fread(Magic, 1, 4, File) != 4 || memcmp(Magic, NGRAM_MAGIC, 4) != 0)
+    {
+        fclose(File);
+        return 0;   // 우리 파일이 아니다
+    }
+
+    if (!ReadU32(File, &OrderMark) || OrderMark != NGRAM_ORDERMARK)
+    {
+        fclose(File);
+        return 0;   // 바이트 순서가 다른 기계에서 구운 파일이다
+    }
+
+    if (!ReadU32(File, &Version) || Version != NGRAM_VERSION)
+    {
+        fclose(File);
+        return 0;
+    }
+
+    if (!ReadU32(File, &Order) || Order < 1 || Order > NGRAM_MAX_ORDER)
+    {
+        fclose(File);
+        return 0;
+    }
+
+    uint64_t GramCount = 0;
+    uint64_t ContextCount = 0;
+    uint64_t Total = 0;
+    uint64_t Once = 0;
+    uint64_t Lines = 0;
+    uint64_t Chars = 0;
+
+    int Ok = 1;
+    Ok = Ok && ReadU64(File, &GramCount);
+    Ok = Ok && ReadU64(File, &ContextCount);
+    Ok = Ok && ReadU64(File, &Total);
+    Ok = Ok && ReadU64(File, &Once);
+    Ok = Ok && ReadU64(File, &Lines);
+    Ok = Ok && ReadU64(File, &Chars);
+
+    if (!Ok || GramCount == 0)
+    {
+        fclose(File);
+        return 0;
+    }
+
+    size_t GramWords = (size_t)GramCount * (size_t)Order;
+
+    uint32_t* Grams = (uint32_t*)malloc(GramWords * sizeof(uint32_t));
+    uint64_t* Cumulative = (uint64_t*)malloc((size_t)GramCount * sizeof(uint64_t));
+    uint64_t* ContextStart =
+        (uint64_t*)malloc(((size_t)ContextCount + 1) * sizeof(uint64_t));
+
+    if (Grams == NULL || Cumulative == NULL || ContextStart == NULL)
+    {
+        free(Grams);
+        free(Cumulative);
+        free(ContextStart);
+        fclose(File);
+        return 0;
+    }
+
+    Ok = Ok && (fread(Grams, sizeof(uint32_t), GramWords, File) == GramWords);
+    Ok = Ok && (fread(Cumulative, sizeof(uint64_t), (size_t)GramCount, File)
+                == (size_t)GramCount);
+    Ok = Ok && (fread(ContextStart, sizeof(uint64_t), (size_t)ContextCount + 1,
+                      File) == (size_t)ContextCount + 1);
+
+    fclose(File);
+
+    if (!Ok)
+    {
+        free(Grams);
+        free(Cumulative);
+        free(ContextStart);
+        return 0;
+    }
+
+    Model->Order = (int)Order;
+    Model->Grams = Grams;
+    Model->Cumulative = Cumulative;
+    Model->GramCount = GramCount;
+    Model->ContextStart = ContextStart;
+    Model->ContextCount = ContextCount;
+    Model->Total = Total;
+    Model->OnceCount = Once;
+    Model->LineCount = Lines;
+    Model->CharCount = Chars;
+
+    return 1;
+}
