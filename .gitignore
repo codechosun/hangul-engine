@@ -19,3 +19,6 @@ x64/
 Debug/
 Release/
 .vs/
+
+# 커맨드라인 빌드 산출물
+build/

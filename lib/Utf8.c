@@ -103,6 +103,16 @@ int Utf8Decode(const char* Text, uint32_t* OutCode)
     return 0;   // 선행 바이트가 아니다
 }
 
+int Utf8SequenceLength(unsigned char First)
+{
+    if ((First & 0x80u) == 0x00u) return 1;   // 0xxxxxxx
+    if ((First & 0xE0u) == 0xC0u) return 2;   // 110xxxxx
+    if ((First & 0xF0u) == 0xE0u) return 3;   // 1110xxxx
+    if ((First & 0xF8u) == 0xF0u) return 4;   // 11110xxx
+
+    return 0;   // 10xxxxxx 이거나 정의되지 않은 패턴
+}
+
 int Utf8Length(const char* Text)
 {
     assert(Text != NULL);
