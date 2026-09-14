@@ -1,0 +1,35 @@
+교재 본문 라이선스
+
+Copyright (c) 2026 [저작권자 이름을 여기에 적을 것]
+
+이 라이선스는 이 저장소의 **본문**에 적용된다.
+  모든 .md 파일 (각 장의 README.md, CONVENTION.md 등)
+
+코드(.c .h .py)는 MIT 이며 LICENSE 를 참고할 것.
+
+---
+
+Creative Commons Attribution-NonCommercial 4.0 International
+(CC BY-NC 4.0)
+
+전문: https://creativecommons.org/licenses/by-nc/4.0/legalcode.ko
+요약: https://creativecommons.org/licenses/by-nc/4.0/deed.ko
+
+허용되는 것
+  공유   — 어떤 매체나 형식으로든 복제·배포
+  변경   — 리믹스, 변형, 2차적 저작물 작성
+
+조건
+  저작자 표시  적절한 출처와 라이선스 링크를 밝히고, 변경이 있었다면 그 사실을 표시할 것
+  비영리       상업적 목적으로 이용할 수 없음
+
+---
+
+참고
+
+이 조건은 **본문에만** 적용된다. 코드는 MIT 이므로 상업적 이용에 제한이 없다.
+교재를 보고 배운 내용으로 만든 결과물에도 제한이 없다.
+
+이 저장소가 데이터로 사용하는 한국어 위키백과는 CC BY-SA 이며,
+저작자는 위키미디어 재단과 각 문서의 기여자들이다.
+스냅샷: wikimedia/wikipedia, 20231101.ko
