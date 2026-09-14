@@ -61,6 +61,189 @@ static int CompareTokens(const uint32_t* A, const uint32_t* B, int Length)
     return 0;
 }
 
+// 센 결과(해시맵)를 CSR 로 옮긴다. 세는 방법이 무엇이든 이 뒤는 같다.
+static int FinishFromMap(FNgram* Model, FGramMap* Map, int Order,
+                         uint64_t Total, uint64_t Lines, uint64_t Chars)
+{
+    FGramRow* Rows = (FGramRow*)malloc((size_t)Map->Count * sizeof(FGramRow));
+    if (Rows == NULL)
+    {
+        GramMapFree(Map);
+        return 0;
+    }
+
+    uint64_t RowCount = 0;
+    uint64_t Once = 0;
+
+    for (uint64_t i = 0; i < Map->Capacity; i++)
+    {
+        if (Map->Index[i] == 0)
+        {
+            continue;
+        }
+
+        const uint32_t* Key = GramMapKeyAt(Map, Map->Index[i] - 1);
+
+        memset(&Rows[RowCount], 0, sizeof(FGramRow));
+        memcpy(Rows[RowCount].Token, Key, (size_t)Order * sizeof(uint32_t));
+        Rows[RowCount].Count = Map->Values[i];
+
+        if (Map->Values[i] == 1)
+        {
+            Once++;
+        }
+
+        RowCount++;
+    }
+
+    GramMapFree(Map);
+
+    GSortOrder = Order;
+    qsort(Rows, (size_t)RowCount, sizeof(FGramRow), CompareGramRow);
+
+    uint32_t* Grams =
+        (uint32_t*)malloc((size_t)RowCount * (size_t)Order * sizeof(uint32_t));
+    uint64_t* Cumulative =
+        (uint64_t*)malloc((size_t)RowCount * sizeof(uint64_t));
+
+    if (Grams == NULL || Cumulative == NULL)
+    {
+        free(Grams);
+        free(Cumulative);
+        free(Rows);
+        return 0;
+    }
+
+    uint64_t ContextCount = 0;
+    for (uint64_t i = 0; i < RowCount; i++)
+    {
+        if (i == 0 || !SameContext(Rows[i].Token, Rows[i - 1].Token, Order - 1))
+        {
+            ContextCount++;
+        }
+    }
+
+    uint64_t* ContextStart =
+        (uint64_t*)malloc((size_t)(ContextCount + 1) * sizeof(uint64_t));
+
+    if (ContextStart == NULL)
+    {
+        free(Grams);
+        free(Cumulative);
+        free(Rows);
+        return 0;
+    }
+
+    uint64_t ContextIndex = 0;
+    uint64_t Running = 0;
+
+    for (uint64_t i = 0; i < RowCount; i++)
+    {
+        if (i == 0 || !SameContext(Rows[i].Token, Rows[i - 1].Token, Order - 1))
+        {
+            ContextStart[ContextIndex++] = i;
+            Running = 0;
+        }
+
+        Running += Rows[i].Count;
+        Cumulative[i] = Running;
+
+        memcpy(Grams + i * (uint64_t)Order, Rows[i].Token,
+               (size_t)Order * sizeof(uint32_t));
+    }
+
+    ContextStart[ContextCount] = RowCount;
+
+    free(Rows);
+
+    Model->Order = Order;
+    Model->Grams = Grams;
+    Model->Cumulative = Cumulative;
+    Model->GramCount = RowCount;
+    Model->ContextStart = ContextStart;
+    Model->ContextCount = ContextCount;
+    Model->Total = Total;
+    Model->OnceCount = Once;
+    Model->LineCount = Lines;
+    Model->CharCount = Chars;
+
+    return 1;
+}
+
+// 이미 만들어둔 토큰 배열로 센다.
+//
+// 아래 NgramBuild 의 1단계와 루프가 똑같다. 토큰을 파일에서 받느냐
+// 배열에서 받느냐만 다른데, C 에서는 그 차이를 공짜로 추상화할 수가 없다.
+// 함수 포인터로 묶으면 토큰 하나마다 간접 호출 비용을 낸다. (A9 본문 참고)
+int NgramBuildFromTokens(FNgram* Model, const uint32_t* Tokens, uint64_t Count,
+                         int Order)
+{
+    assert(Model != NULL);
+    assert(Tokens != NULL);
+    assert(Order >= 1 && Order <= NGRAM_MAX_ORDER);
+
+    memset(Model, 0, sizeof(*Model));
+    Model->Order = Order;
+
+    FGramMap Map;
+    if (!GramMapInit(&Map, Order, 1024))
+    {
+        return 0;
+    }
+
+    uint32_t Window[NGRAM_MAX_ORDER];
+    for (int i = 0; i < Order; i++)
+    {
+        Window[i] = TOKEN_BOS;
+    }
+
+    uint64_t Total = 0;
+    uint64_t Lines = 0;
+    uint64_t Chars = 0;
+
+    for (uint64_t i = 0; i < Count; i++)
+    {
+        uint32_t Token = Tokens[i];
+
+        for (int k = 0; k < Order - 1; k++)
+        {
+            Window[k] = Window[k + 1];
+        }
+        Window[Order - 1] = Token;
+
+        GramMapAdd(&Map, Window, 1);
+        Total++;
+
+        if (Token == TOKEN_EOS)
+        {
+            Lines++;
+            for (int k = 0; k < Order; k++)
+            {
+                Window[k] = TOKEN_BOS;
+            }
+        }
+        else
+        {
+            Chars++;
+        }
+    }
+
+    if (Window[Order - 1] != TOKEN_BOS)
+    {
+        for (int k = 0; k < Order - 1; k++)
+        {
+            Window[k] = Window[k + 1];
+        }
+        Window[Order - 1] = TOKEN_EOS;
+
+        GramMapAdd(&Map, Window, 1);
+        Total++;
+        Lines++;
+    }
+
+    return FinishFromMap(Model, &Map, Order, Total, Lines, Chars);
+}
+
 int NgramBuild(FNgram* Model, const char* Path, int Order, uint64_t MaxLines)
 {
     assert(Model != NULL);
@@ -152,111 +335,7 @@ int NgramBuild(FNgram* Model, const char* Path, int Order, uint64_t MaxLines)
         Lines++;
     }
 
-    // ---- 2단계. 꺼내서 사전순으로 정렬 ----
-    FGramRow* Rows = (FGramRow*)malloc((size_t)Map.Count * sizeof(FGramRow));
-    if (Rows == NULL)
-    {
-        GramMapFree(&Map);
-        return 0;
-    }
-
-    uint64_t RowCount = 0;
-    uint64_t Once = 0;
-
-    for (uint64_t i = 0; i < Map.Capacity; i++)
-    {
-        if (Map.Index[i] == 0)
-        {
-            continue;
-        }
-
-        const uint32_t* Key = GramMapKeyAt(&Map, Map.Index[i] - 1);
-
-        memset(&Rows[RowCount], 0, sizeof(FGramRow));
-        memcpy(Rows[RowCount].Token, Key, (size_t)Order * sizeof(uint32_t));
-        Rows[RowCount].Count = Map.Values[i];
-
-        if (Map.Values[i] == 1)
-        {
-            Once++;
-        }
-
-        RowCount++;
-    }
-
-    GramMapFree(&Map);
-
-    GSortOrder = Order;
-    qsort(Rows, (size_t)RowCount, sizeof(FGramRow), CompareGramRow);
-
-    // ---- 3단계. 배열로 펴고 문맥 구간을 만든다 ----
-    uint32_t* Grams =
-        (uint32_t*)malloc((size_t)RowCount * (size_t)Order * sizeof(uint32_t));
-    uint64_t* Cumulative =
-        (uint64_t*)malloc((size_t)RowCount * sizeof(uint64_t));
-
-    if (Grams == NULL || Cumulative == NULL)
-    {
-        free(Grams);
-        free(Cumulative);
-        free(Rows);
-        return 0;
-    }
-
-    // 문맥이 몇 개인지 먼저 센다.
-    uint64_t ContextCount = 0;
-    for (uint64_t i = 0; i < RowCount; i++)
-    {
-        if (i == 0 || !SameContext(Rows[i].Token, Rows[i - 1].Token, Order - 1))
-        {
-            ContextCount++;
-        }
-    }
-
-    uint64_t* ContextStart =
-        (uint64_t*)malloc((size_t)(ContextCount + 1) * sizeof(uint64_t));
-
-    if (ContextStart == NULL)
-    {
-        free(Grams);
-        free(Cumulative);
-        free(Rows);
-        return 0;
-    }
-
-    uint64_t ContextIndex = 0;
-    uint64_t Running = 0;
-
-    for (uint64_t i = 0; i < RowCount; i++)
-    {
-        if (i == 0 || !SameContext(Rows[i].Token, Rows[i - 1].Token, Order - 1))
-        {
-            ContextStart[ContextIndex++] = i;
-            Running = 0;
-        }
-
-        Running += Rows[i].Count;
-        Cumulative[i] = Running;
-
-        memcpy(Grams + i * (uint64_t)Order, Rows[i].Token,
-               (size_t)Order * sizeof(uint32_t));
-    }
-
-    ContextStart[ContextCount] = RowCount;
-
-    free(Rows);
-
-    Model->Grams = Grams;
-    Model->Cumulative = Cumulative;
-    Model->GramCount = RowCount;
-    Model->ContextStart = ContextStart;
-    Model->ContextCount = ContextCount;
-    Model->Total = Total;
-    Model->OnceCount = Once;
-    Model->LineCount = Lines;
-    Model->CharCount = Chars;
-
-    return 1;
+    return FinishFromMap(Model, &Map, Order, Total, Lines, Chars);
 }
 
 void NgramFree(FNgram* Model)

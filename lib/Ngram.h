@@ -46,6 +46,13 @@ typedef struct
 // 성공하면 1.
 int NgramBuild(FNgram* Model, const char* Path, int Order, uint64_t MaxLines);
 
+// 이미 만들어둔 토큰 배열로 모델을 만든다. (A9 에서 추가)
+//
+// Tokens 안에서 TOKEN_EOS 가 문장의 끝을 뜻한다. BOS 패딩은 여기서 붙인다.
+// 파일에서 읽는 NgramBuild 와 세는 방법이 똑같다 — 토큰을 주는 쪽만 다르다.
+int NgramBuildFromTokens(FNgram* Model, const uint32_t* Tokens, uint64_t Count,
+                         int Order);
+
 void NgramFree(FNgram* Model);
 
 // 그램(토큰 Order 개)이 나온 횟수. 없으면 0.
