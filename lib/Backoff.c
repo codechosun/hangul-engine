@@ -13,6 +13,8 @@ int BackoffBuild(FBackoff* Backoff, const char* Path,
 
     memset(Backoff, 0, sizeof(*Backoff));
     Backoff->MaxOrder = MaxOrder;
+    Backoff->DiscountNum = BACKOFF_NUM;
+    Backoff->DiscountDen = BACKOFF_DEN;
 
     for (int Order = 1; Order <= MaxOrder; Order++)
     {
@@ -39,6 +41,16 @@ void BackoffFree(FBackoff* Backoff)
     }
 
     memset(Backoff, 0, sizeof(*Backoff));
+}
+
+void BackoffSetDiscount(FBackoff* Backoff, uint32_t Num, uint32_t Den)
+{
+    assert(Backoff != NULL);
+    assert(Den > 0);
+    assert(Num < Den);
+
+    Backoff->DiscountNum = Num;
+    Backoff->DiscountDen = Den;
 }
 
 void BackoffResetStats(FBackoff* Backoff)
@@ -103,8 +115,8 @@ uint32_t BackoffPick(FBackoff* Backoff, const uint32_t* Context, int Length,
     //     전체    = DEN * Total
     //     넘길 몫 = NUM * Choices
     //     남는 몫 = DEN * Total - NUM * Choices
-    uint64_t Scale = (uint64_t)BACKOFF_DEN * Total;
-    uint64_t Reserved = (uint64_t)BACKOFF_NUM * Choices;
+    uint64_t Scale = (uint64_t)Backoff->DiscountDen * Total;
+    uint64_t Reserved = (uint64_t)Backoff->DiscountNum * Choices;
 
     uint64_t Draw = RandomBelow(Rng, Scale);
 
@@ -124,8 +136,8 @@ uint32_t BackoffPick(FBackoff* Backoff, const uint32_t* Context, int Length,
     while (Low < High)
     {
         uint64_t Mid = Low + (High - Low) / 2;
-        uint64_t Cum = (uint64_t)BACKOFF_DEN * Model->Cumulative[Mid]
-                     - (uint64_t)BACKOFF_NUM * (Mid - From + 1);
+        uint64_t Cum = (uint64_t)Backoff->DiscountDen * Model->Cumulative[Mid]
+                     - (uint64_t)Backoff->DiscountNum * (Mid - From + 1);
 
         if (Cum > Target) High = Mid;
         else              Low = Mid + 1;
@@ -175,4 +187,60 @@ int BackoffGenerate(FBackoff* Backoff, FRandom* Rng,
     }
 
     return Written;
+}
+
+double BackoffProb(const FBackoff* Backoff, const uint32_t* Context, int Length,
+                   uint32_t Token)
+{
+    assert(Backoff != NULL);
+    assert(Length >= 0);
+
+    const FNgram* Model = &Backoff->Orders[Length + 1];
+
+    // ---- 바닥. 1그램은 할인하지 않는다 ----
+    if (Length == 0)
+    {
+        uint64_t Total = Model->Cumulative[Model->ContextStart[1] - 1];
+        uint64_t Count = NgramCount(Model, &Token);
+
+        return (double)Count / (double)Total;
+    }
+
+    int64_t Index = NgramFindContext(Model, Context);
+
+    // ---- 문맥 자체가 없다. 짧은 문맥이 전부를 책임진다 ----
+    if (Index < 0)
+    {
+        return BackoffProb(Backoff, Context + 1, Length - 1, Token);
+    }
+
+    uint64_t From = Model->ContextStart[Index];
+    uint64_t To = Model->ContextStart[Index + 1];
+    uint64_t Choices = To - From;
+    uint64_t Total = Model->Cumulative[To - 1];
+
+    // 그램 하나를 만들어 횟수를 찾는다.
+    uint32_t Gram[NGRAM_MAX_ORDER];
+    for (int i = 0; i < Length; i++)
+    {
+        Gram[i] = Context[i];
+    }
+    Gram[Length] = Token;
+
+    uint64_t Count = NgramCount(Model, Gram);
+
+    double Scale = (double)Backoff->DiscountDen * (double)Total;
+
+    // 이 차수가 직접 주는 몫. BackoffPick 이 뽑는 칸의 너비와 같다.
+    double Direct = 0.0;
+    if (Count > 0)
+    {
+        Direct = ((double)Backoff->DiscountDen * (double)Count
+                  - (double)Backoff->DiscountNum) / Scale;
+    }
+
+    // 짧은 문맥에 넘긴 몫.
+    double Reserved = (double)Backoff->DiscountNum * (double)Choices / Scale;
+
+    return Direct + Reserved * BackoffProb(Backoff, Context + 1, Length - 1, Token);
 }

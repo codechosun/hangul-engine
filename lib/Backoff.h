@@ -43,6 +43,11 @@ typedef struct
     int MaxOrder;
     FNgram Orders[NGRAM_MAX_ORDER + 1];   // Orders[k] 는 k그램 모델
 
+    // 할인율. 기본값은 BACKOFF_NUM / BACKOFF_DEN 이고,
+    // B2 에서 이 값을 바꿔가며 퍼플렉서티를 잰다.
+    uint32_t DiscountNum;
+    uint32_t DiscountDen;
+
     // 통계. 어느 차수에서 뽑았는지 센다.
     uint64_t PickCount;
     uint64_t UsedAt[NGRAM_MAX_ORDER + 1];
@@ -58,6 +63,9 @@ void BackoffFree(FBackoff* Backoff);
 
 void BackoffResetStats(FBackoff* Backoff);
 
+// 할인율을 바꾼다. Den 은 0 이면 안 되고 Num < Den 이어야 한다.
+void BackoffSetDiscount(FBackoff* Backoff, uint32_t Num, uint32_t Den);
+
 // 문맥(토큰 Length 개) 다음에 올 토큰 하나를 뽑는다.
 // 절대 실패하지 않는다. 최악의 경우 글자 빈도에서 뽑는다.
 uint32_t BackoffPick(FBackoff* Backoff, const uint32_t* Context, int Length,
@@ -66,6 +74,16 @@ uint32_t BackoffPick(FBackoff* Backoff, const uint32_t* Context, int Length,
 // 문장 하나를 만든다. 담은 글자 수를 돌려준다.
 int BackoffGenerate(FBackoff* Backoff, FRandom* Rng,
                     uint32_t* Out, int MaxLength);
+
+// 문맥 다음에 Token 이 올 확률. (B2 에서 추가)
+//
+// BackoffPick 이 뽑는 것과 **정확히 같은 분포**다. 뽑기는 난수로 한 칸을
+// 고르는 일이고, 이것은 그 칸의 너비를 재는 일이다.
+//
+// 1그램도 모르는 토큰이면 0 을 돌려준다. 로그를 씌우면 음의 무한대가 되므로,
+// 부르는 쪽에서 반드시 처리해야 한다. B2 본문 참고.
+double BackoffProb(const FBackoff* Backoff, const uint32_t* Context, int Length,
+                   uint32_t Token);
 
 #ifdef __cplusplus
 }
