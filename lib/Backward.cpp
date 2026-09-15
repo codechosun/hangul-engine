@@ -506,6 +506,93 @@ FTensor CrossEntropyBackward(const FTensor& Logits, const uint32_t* Targets)
     return Result;
 }
 
+double CrossEntropyLossMasked(const FTensor& Logits, const uint32_t* Targets,
+                              const uint8_t* Mask)
+{
+    const size_t Batch = Logits.Size(0);
+    const size_t Length = Logits.Size(1);
+    const size_t Vocab = Logits.Size(2);
+
+    double Total = 0.0;
+    size_t Scored = 0;
+
+    for (size_t r = 0; r < Batch * Length; r++)
+    {
+        if (Mask[r] == 0) continue;
+
+        const Real* Row = Logits.Data() + r * Vocab;
+
+        double Biggest = (double)Row[0];
+        for (size_t v = 1; v < Vocab; v++)
+        {
+            if ((double)Row[v] > Biggest) Biggest = (double)Row[v];
+        }
+
+        double Sum = 0.0;
+        for (size_t v = 0; v < Vocab; v++)
+        {
+            Sum += std::exp((double)Row[v] - Biggest);
+        }
+
+        Total -= ((double)Row[Targets[r]] - Biggest) - std::log(Sum);
+        Scored++;
+    }
+
+    return (Scored > 0) ? (Total / (double)Scored) : 0.0;
+}
+
+FTensor CrossEntropyBackwardMasked(const FTensor& Logits,
+                                   const uint32_t* Targets,
+                                   const uint8_t* Mask)
+{
+    const size_t Batch = Logits.Size(0);
+    const size_t Length = Logits.Size(1);
+    const size_t Vocab = Logits.Size(2);
+
+    size_t Scored = 0;
+    for (size_t r = 0; r < Batch * Length; r++)
+    {
+        if (Mask[r] != 0) Scored++;
+    }
+
+    FTensor Result(Logits.GetShape());
+
+    // 마스킹된 자리는 **건드리지 않는다.** 0 으로 채워둔 채 그대로 둔다.
+    // 그러면 그 자리에서 아무 신호도 안 올라간다.
+    Result.Fill(Real(0));
+
+    if (Scored == 0) return Result;
+
+    for (size_t r = 0; r < Batch * Length; r++)
+    {
+        if (Mask[r] == 0) continue;
+
+        const Real* Row = Logits.Data() + r * Vocab;
+        Real* Out = Result.Data() + r * Vocab;
+
+        double Biggest = (double)Row[0];
+        for (size_t v = 1; v < Vocab; v++)
+        {
+            if ((double)Row[v] > Biggest) Biggest = (double)Row[v];
+        }
+
+        double Sum = 0.0;
+        for (size_t v = 0; v < Vocab; v++)
+        {
+            Sum += std::exp((double)Row[v] - Biggest);
+        }
+
+        for (size_t v = 0; v < Vocab; v++)
+        {
+            const double P = std::exp((double)Row[v] - Biggest) / Sum;
+            Out[v] = (Real)((P - ((size_t)Targets[r] == v ? 1.0 : 0.0))
+                          / (double)Scored);
+        }
+    }
+
+    return Result;
+}
+
 // ---------------------------------------------------------------- 배선
 
 namespace

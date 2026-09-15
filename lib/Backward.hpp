@@ -169,6 +169,20 @@ double CrossEntropyLoss(const FTensor& Logits, const uint32_t* Targets);
 // 그 미분. (p - y) / N 이다. C2 에서 유도한 그대로다.
 FTensor CrossEntropyBackward(const FTensor& Logits, const uint32_t* Targets);
 
+// 마스크가 1 인 자리만 채점한다. (E1 에서 추가)
+//
+// 나눗수가 **채점하는 자리 수**라는 점이 중요하다. 전체 자리 수로 나누면
+// 마스킹된 자리가 많을수록 손실이 작아 보여서, 서로 다른 묶음의 손실을
+// 비교할 수 없게 된다.
+//
+// 채점하는 자리가 하나도 없으면 손실 0, 그래디언트 0 을 돌려준다.
+double CrossEntropyLossMasked(const FTensor& Logits, const uint32_t* Targets,
+                              const uint8_t* Mask);
+
+FTensor CrossEntropyBackwardMasked(const FTensor& Logits,
+                                   const uint32_t* Targets,
+                                   const uint8_t* Mask);
+
 // ---- gradcheck 을 위한 배선 ----
 //
 // 모델의 파라미터는 텐서 여러 개에 흩어져 있다. C2 의 GradCheck 는
