@@ -76,6 +76,23 @@ void FTokenizer::BuildFromText(const char* Text, size_t Bytes, size_t Limit,
     }
 }
 
+void FTokenizer::BuildFromCodepoints(const std::vector<uint32_t>& InCodepoints,
+                                     size_t InSpecialCount)
+{
+    Codepoints = InCodepoints;
+    SpecialCount = InSpecialCount;
+    CoverageRatio = 0.0;   // 원문을 안 봤으므로 말할 수 없다
+
+    Table.assign(GTableSize, -1);
+    for (size_t i = 0; i < Codepoints.size(); i++)
+    {
+        if (Codepoints[i] < GTableSize)
+        {
+            Table[Codepoints[i]] = (int)i;
+        }
+    }
+}
+
 int FTokenizer::Find(uint32_t Codepoint) const
 {
     if (Codepoint >= GTableSize) return -1;

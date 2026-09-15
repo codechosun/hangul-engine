@@ -24,6 +24,13 @@ data/training_curve.csv
 
 # D8 이 만들어내는 그로킹 곡선. 예제를 한 번 돌리면 다시 생긴다.
 data/grokking_curve.csv
+
+# E2 가 만들어내는 것. 예제를 한 번 돌리면 다시 생긴다.
+data/chat.hgen
+data/chat-damaged.hgen
+
+# tools/export_engine.py 가 만드는 배포 폴더.
+dist/
 data/pca_cpp.csv
 
 # A9 가 쓰는 Kiwi 배포본. 500MB 급이라 커밋하지 않는다.

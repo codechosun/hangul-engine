@@ -47,6 +47,18 @@ struct FKvCache
     size_t Bytes() const;
 };
 
+// 모델의 모든 파라미터를 **정해진 순서로** 한 줄에 모은다.
+//
+// 이 순서는 두 곳에서 계약이 된다.
+//   gradcheck   Backward.hpp 의 CollectGradients 와 짝이 맞아야 한다
+//   모델 파일   Engine 이 이 순서대로 적는다. 바꾸면 판 번호를 올려야 한다
+//
+// E2 에서 Backward.hpp 에서 이리로 옮겼다. 파라미터를 세는 일은
+// 역전파의 일이 아니라 **모델 자신의 일**이다. 엔진이 역전파 없이
+// 모델만 싣고 돌 수 있어야 한다.
+class FTransformer;
+void CollectParameters(FTransformer& Model, std::vector<Real*>& Out);
+
 class FTransformer
 {
 public:

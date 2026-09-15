@@ -608,30 +608,6 @@ void PushTensor(FTensor& T, std::vector<Real*>& Out)
 
 } // namespace
 
-void CollectParameters(FTransformer& Model, std::vector<Real*>& Out)
-{
-    Out.clear();
-
-    PushTensor(Model.TokenEmbedding, Out);
-    PushTensor(Model.PositionEmbedding, Out);
-
-    for (size_t i = 0; i < Model.Blocks.size(); i++)
-    {
-        FBlock& B = Model.Blocks[i];
-        PushTensor(B.Query.Weight, Out);
-        PushTensor(B.Key.Weight, Out);
-        PushTensor(B.Value.Weight, Out);
-        PushTensor(B.Project.Weight, Out);
-        PushTensor(B.Up.Weight, Out);
-        PushTensor(B.Down.Weight, Out);
-        PushTensor(B.AttentionGain, Out);
-        PushTensor(B.FeedGain, Out);
-    }
-
-    PushTensor(Model.FinalGain, Out);
-    PushTensor(Model.Head.Weight, Out);
-}
-
 void CollectGradients(FTransformerGrad& Grad, std::vector<Real*>& Out)
 {
     Out.clear();

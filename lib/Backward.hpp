@@ -23,7 +23,6 @@
 #define BACKWARD_HPP
 
 #include "Block.hpp"
-#include "GradCheck.hpp"
 #include "Model.hpp"
 #include "Tensor.hpp"
 #include "Types.h"
@@ -188,8 +187,13 @@ FTensor CrossEntropyBackwardMasked(const FTensor& Logits,
 // 모델의 파라미터는 텐서 여러 개에 흩어져 있다. C2 의 GradCheck 는
 // 한 줄로 이어진 배열을 받으므로 그대로는 못 쓴다. 포인터를 모아준다.
 //
+// GradCheck.hpp 를 여기서 포함하지 않는다. 쓰는 쪽이 직접 포함한다.
+// 검증 도구는 **엔진에 실리지 않아야** 하기 때문이다. (E2)
+//
+// 짝이 되는 CollectParameters 는 **Model.hpp** 에 있다. 파라미터를 세는
+// 일은 역전파의 일이 아니라 모델의 일이기 때문이다. (E2 에서 옮겼다)
+//
 // 두 함수가 **같은 순서**로 모은다는 것이 이 배선의 전부다.
-void CollectParameters(FTransformer& Model, std::vector<Real*>& Out);
 void CollectGradients(FTransformerGrad& Grad, std::vector<Real*>& Out);
 
 #endif

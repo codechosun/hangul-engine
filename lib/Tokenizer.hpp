@@ -32,6 +32,13 @@ public:
     void BuildFromText(const char* Text, size_t Bytes, size_t Limit,
                        size_t SpecialCount);
 
+    // 이미 정해진 어휘를 그대로 받는다. 모델 파일에서 읽을 때 쓴다. (E2)
+    void BuildFromCodepoints(const std::vector<uint32_t>& InCodepoints,
+                             size_t InSpecialCount);
+
+    // 번호 순서대로의 글자 목록. 모델 파일에 적을 때 쓴다. (E2)
+    const std::vector<uint32_t>& Alphabet() const { return Codepoints; }
+
     size_t Size() const { return Codepoints.size() + SpecialCount; }
     size_t PlainCount() const { return Codepoints.size(); }
     size_t FirstSpecial() const { return Codepoints.size(); }
