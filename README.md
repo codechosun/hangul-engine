@@ -78,8 +78,10 @@ hangul-engine/
 ├─ common/        교재 도구 (검증 매크로, 타입 규약) — 엔진에는 안 들어감
 ├─ lib/           엔진이 될 코드 — 장을 거치며 자란다
 ├─ ch-A00-.../    장별 실습 코드와 본문
-├─ tools/         파이썬 스크립트 (데이터 준비, 시각화)
+├─ tools/         파이썬 스크립트 (데이터 준비, 시각화, 엔진 내보내기)
 ├─ data/          코퍼스와 정답표
+├─ dist/          내보낸 엔진 (export_engine.py 가 만든다)
+├─ build.bat      빌드 스크립트
 └─ CONVENTION.md  코딩 컨벤션
 ```
 
@@ -90,6 +92,36 @@ hangul-engine/
 ### 빌드
 
 **Visual Studio / MSVC**, **C11 / C++17**, **x64** 기준이다.
+
+저장소 루트에 `build.bat` 가 있다. MSVC 를 알아서 찾아 설정한다.
+
+```
+build.bat                엔진을 내보내고 데모까지 만든다 (아래 참고)
+build.bat d07            ch-D07-training 을 build\d07.exe 로
+build.bat d06 double     USE_DOUBLE 로. D6 의 gradcheck 은 이게 필요하다
+build.bat all            서른 장을 전부 빌드한다
+```
+
+인자 없이 돌리면 세 단계를 한 번에 한다.
+
+```
+1/3  ch-E02-engine 을 빌드해 돌린다   -> 모델을 훈련해 data\chat.hgen 을 굽는다 (약 1분)
+2/3  python tools/export_engine.py   -> dist\hangul-engine\ (43개 파일)
+3/3  dist\ 만 보고 데모 앱을 빌드한다 -> build\hello.exe
+```
+
+마지막에 이게 찍히면 성공이다.
+
+```
+한글 엔진
+  파라미터 244128개, 953.6 KB
+
+  사용자 : 안녕
+  엔진   : 안녕하세요. 무엇을 도와드릴까요?
+```
+
+**이 데모는 코퍼스가 없어도 된다.** 대화 예문 16쌍이 소스에 들어 있다.
+A2부터의 장들은 아래 데이터 준비가 필요하다.
 
 프로젝트 설정 네 가지는 [A0](ch-A00-skeleton/README.md)에 정리해두었다. `/utf-8` 옵션을 빼먹으면 한글이 깨지므로 주의.
 
@@ -114,6 +146,7 @@ python -m venv .venv
 .venv/Scripts/python tools/make_nplm_expected.py      # data/nplm_expected.csv
 .venv/Scripts/python tools/make_npy_expected.py       # data/npy_*.npy
 .venv/Scripts/python tools/make_transformer_expected.py  # data/transformer_expected.csv
+.venv/Scripts/python tools/make_training_expected.py     # data/training_expected.csv
 ```
 
 A9는 형태소 분석기 Kiwi가 따로 필요하다. 버전이 고정되어 있다.
