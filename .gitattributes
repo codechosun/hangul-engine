@@ -1,16 +1,15 @@
-# 저장소 안에서는 항상 LF 로 저장한다.
-# 윈도우에서 작업하더라도 커밋되는 바이트는 일정해야 한다.
+# 배치 파일은 CRLF 로 체크아웃해야 한다.
+# LF 만 있으면 cmd 가 레이블과 여러 줄 구문을 제대로 못 읽는다.
+*.bat text eol=crlf
+
+# 나머지는 저장소에 LF 로 두고 작업 트리는 건드리지 않는다.
 * text=auto eol=lf
 
-# 정답표는 C 프로그램이 한 줄씩 그대로 비교한다.
-# 줄바꿈이 바뀌면 검증이 깨지므로 변환을 아예 막는다.
-data/expected.csv -text
-data/bigram_expected.csv -text
-data/bigram_summary.csv -text
-data/ngram_expected.csv -text
-data/ngram_context.csv -text
-data/ngram_summary.csv -text
-data/nplm_expected.csv -text
-data/npy_values.csv -text
-data/transformer_expected.csv -text
-data/npy_from_python.npy -text
+# 정답표는 줄 끝이 바뀌면 안 된다 (파이썬이 newline="\n" 으로 굽는다).
+*.csv text eol=lf
+
+# 이진 파일.
+*.png binary
+*.npy binary
+*.bin binary
+*.hgen binary
