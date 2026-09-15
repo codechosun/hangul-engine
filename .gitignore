@@ -18,6 +18,9 @@ data/npy_big.csv
 data/embedding.npy
 data/vocab.csv
 data/loss_curve.csv
+
+# D7 이 만들어내는 훈련 곡선. 예제를 한 번 돌리면 다시 생긴다.
+data/training_curve.csv
 data/pca_cpp.csv
 
 # A9 가 쓰는 Kiwi 배포본. 500MB 급이라 커밋하지 않는다.
