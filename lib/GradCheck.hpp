@@ -44,6 +44,18 @@ FGradCheckResult GradCheck(const std::function<double()>& Loss,
                            Real* Parameters, const Real* Analytic,
                            int Count, double Step);
 
+// 파라미터가 한 줄로 이어져 있지 않을 때. (D6 에서 추가)
+//
+// 트랜스포머의 가중치는 텐서 여러 개에 흩어져 있다. 포인터를 모아 넘긴다.
+// Parameters[i] 와 Analytic[i] 가 **같은 것을 가리켜야** 한다.
+//
+// Which 가 비어 있지 않으면 그 번호만 검사한다. 파라미터가 십만 개면
+// 전부 흔드는 데 십만 번의 순전파가 두 번씩 든다. 골라 쓰기 위한 것이다.
+FGradCheckResult GradCheckScattered(const std::function<double()>& Loss,
+                                    Real* const* Parameters,
+                                    const Real* const* Analytic,
+                                    const int* Which, int Count, double Step);
+
 // 상대 오차. 둘 다 0 에 가까우면 0 을 돌려준다.
 double RelativeError(double A, double B);
 

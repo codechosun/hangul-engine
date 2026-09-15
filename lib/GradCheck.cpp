@@ -60,3 +60,45 @@ FGradCheckResult GradCheck(const std::function<double()>& Loss,
 
     return Result;
 }
+
+FGradCheckResult GradCheckScattered(const std::function<double()>& Loss,
+                                    Real* const* Parameters,
+                                    const Real* const* Analytic,
+                                    const int* Which, int Count, double Step)
+{
+    FGradCheckResult Result;
+    Result.Count = Count;
+
+    for (int n = 0; n < Count; n++)
+    {
+        const int i = (Which != nullptr) ? Which[n] : n;
+
+        Real* Slot = Parameters[i];
+        Real Saved = *Slot;
+
+        *Slot = (Real)((double)Saved + Step);
+        double Plus = Loss();
+
+        *Slot = (Real)((double)Saved - Step);
+        double Minus = Loss();
+
+        *Slot = Saved;
+
+        double Numeric = (Plus - Minus) / (2.0 * Step);
+        double Exact = (double)(*Analytic[i]);
+
+        double Relative = RelativeError(Numeric, Exact);
+        double Absolute = std::fabs(Numeric - Exact);
+
+        if (Relative > Result.WorstRelative)
+        {
+            Result.WorstRelative = Relative;
+            Result.WorstAbsolute = Absolute;
+            Result.WorstIndex = i;
+            Result.WorstAnalytic = Exact;
+            Result.WorstNumeric = Numeric;
+        }
+    }
+
+    return Result;
+}
