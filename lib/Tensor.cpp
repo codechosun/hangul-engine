@@ -310,24 +310,34 @@ FTensor MatMul(const FTensor& A, const FTensor& B)
 
     FTensor Result(Shape);
 
-    for (size_t b = 0; b < Batches; b++)
+    // 묶음과 출력 줄을 한 줄로 펴서 나눈다. (D8 에서 추가)
+    //
+    // 나누는 축이 **출력 줄**이라는 점이 중요하다. 한 줄의 합을 쪼개지
+    // 않으므로 더하는 순서가 안 바뀐다. 스레드 수를 바꿔도 결과가 같다.
+    // D7 의 정답표 대조가 그대로 유지되는 이유다.
+    //
+    // 작은 행렬에서는 스레드를 깨우는 값이 더 비싸다. 그래서 if 를 단다.
+    const int Rows = (int)(Batches * M);
+    const long long Work = (long long)Rows * (long long)K * (long long)N;
+
+    #pragma omp parallel for schedule(static) if (Work > 200000)
+    for (int Flat = 0; Flat < Rows; Flat++)
     {
+        const size_t b = (size_t)Flat / M;
+        const size_t i = (size_t)Flat % M;
+
         const Real* Left = A.Data() + b * M * K;
         const Real* Right = B.Data() + ((B.Rank() > 2) ? (b * K * N) : 0);
-        Real* Out = Result.Data() + b * M * N;
+        Real* OutRow = Result.Data() + b * M * N + i * N;
 
-        for (size_t i = 0; i < M; i++)
+        for (size_t k = 0; k < K; k++)
         {
-            for (size_t k = 0; k < K; k++)
-            {
-                Real Scale = Left[i * K + k];
-                const Real* Row = Right + k * N;
-                Real* OutRow = Out + i * N;
+            Real Scale = Left[i * K + k];
+            const Real* Row = Right + k * N;
 
-                for (size_t j = 0; j < N; j++)
-                {
-                    OutRow[j] += Scale * Row[j];
-                }
+            for (size_t j = 0; j < N; j++)
+            {
+                OutRow[j] += Scale * Row[j];
             }
         }
     }
